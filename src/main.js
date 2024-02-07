@@ -6,27 +6,35 @@ import iziToast from 'izitoast';
 import 'izitoast/dist/css/iziToast.min.css';
 const searchForm = document.querySelector('.search-form');
 const galleryMarkup = document.querySelector('.gallery');
+const loader = document.querySelector('.loader');
 const GALLERY_LINK = 'gallery-link';
 let gallery;
 
 searchForm.addEventListener('submit', function (e) {
   e.preventDefault();
   const query = e.target.elements.query.value.trim();
-  console.log(query);
+  loader.style.display = 'block';
+  // console.log();
   if (query === '') return;
-  getImage(query).then(data => {
-    console.log(data);
-    renderImgs(data.hits);
-
-    gallery = new SimpleLightbox(`.${GALLERY_LINK}`, {
-      captionsData: 'alt',
-      captionDelay: 250,
-    });
-    gallery.refresh();
-    gallery.on('show.simplelightbox');
-  });
-
   galleryMarkup.innerHTML = '';
+  getImage(query)
+    .then(data => {
+      // console.log(data);
+      loader.style.display = 'none';
+      renderImgs(data.hits);
+
+      gallery = new SimpleLightbox(`.${GALLERY_LINK}`, {
+        captionsData: 'alt',
+        captionDelay: 250,
+      });
+      gallery.refresh();
+      gallery.on('show.simplelightbox');
+    })
+    .catch(error => {
+      loader.style.display = 'none';
+      console.error(`${error}`);
+    });
+
   e.target.elements.query.value = '';
 });
 
