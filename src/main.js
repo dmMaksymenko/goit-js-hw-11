@@ -8,22 +8,32 @@ import 'izitoast/dist/css/iziToast.min.css';
 document.addEventListener('DOMContentLoaded', function () {
   const searchForm = document.querySelector('.search-form');
   const galleryMarkup = document.querySelector('.gallery');
+  const submitBtn = document.querySelector('.search-btn');
   const loader = document.querySelector('.loader');
   const GALLERY_LINK = 'gallery-link';
   let gallery;
+  submitBtn.disabled = true;
+
+  searchForm.elements.query.addEventListener('input', function () {
+    const query = this.value.trim();
+
+    submitBtn.disabled = query === '';
+  });
 
   searchForm.addEventListener('submit', function (e) {
     e.preventDefault();
-    loader.style.display = 'block';
     const query = e.target.elements.query.value.trim();
-    // console.log();
-    if (query === '') return;
+    if (query === '') {
+      return;
+    }
+
+    loader.style.display = 'block';
     galleryMarkup.innerHTML = '';
     getImage(query)
       .then(data => {
-        // console.log(data);
         loader.style.display = 'none';
         renderImgs(data.hits);
+        submitBtn.disabled = true;
 
         gallery = new SimpleLightbox(`.${GALLERY_LINK}`, {
           captionsData: 'alt',
@@ -34,7 +44,7 @@ document.addEventListener('DOMContentLoaded', function () {
       })
       .catch(error => {
         loader.style.display = 'none';
-        console.error(`${error}`);
+        onError(`Error fetching images: ${error}`);
       });
 
     e.target.elements.query.value = '';
@@ -61,7 +71,7 @@ document.addEventListener('DOMContentLoaded', function () {
         return res.json();
       })
       .catch(error => {
-        console.error(`${error}`);
+        onError(`Error fetching images: ${error}`);
         throw error;
       });
   }
@@ -102,9 +112,30 @@ document.addEventListener('DOMContentLoaded', function () {
         message:
           'Sorry, there are no images matching your search query. Please try again!',
       });
+      submitBtn.disabled = true;
       return;
     }
     const markup = imgsTemplate(images);
     galleryMarkup.innerHTML = markup;
   }
 });
+
+function onSuccess(message) {
+  iziToast.show({
+    message,
+    backgroundColor: '#EF4040',
+    progressBarColor: '#FFE0AC',
+    icon: 'icon-close',
+    ...toastOptions,
+  });
+}
+
+function onError(message) {
+  iziToast.show({
+    message,
+    backgroundColor: '#59A10D',
+    progressBarColor: '#B5EA7C',
+    icon: 'icon-chek',
+    ...toastOptions,
+  });
+}
